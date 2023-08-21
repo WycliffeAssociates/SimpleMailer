@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using System.IO;
 using System.Net.Mail;
 using System.Net;
+using System.Text.Json;
 
 namespace SimpleMailer
 {
     class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             // Check to see if the configuration file was supplied and does exist
             if (args.Length == 0 || !File.Exists(args[0]))
@@ -22,31 +22,31 @@ namespace SimpleMailer
             }
 
             // Load the options
-            Options options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(args[0]));
+            var options = JsonSerializer.Deserialize<Options>(File.OpenRead(args[0]));
             
-            // Create a smpt client
-            SmtpClient client = new SmtpClient(options.Host, options.Port);
+            // Create a smtp client
+            var client = new SmtpClient(options.Host, options.Port);
             client.Credentials = new NetworkCredential(options.User, options.Password);
             client.EnableSsl = true;
 
             // Create a new message
-            MailMessage message = new MailMessage();
+            var message = new MailMessage();
             message.Subject = options.Subject;
             message.Body = options.Body;
             message.From = new MailAddress(options.From);
 
             // Add all the recipients
-            foreach (string to in options.To)
+            foreach (var to in options.To)
             {
                 message.To.Add(to);
             }
 
-            // Add attachements if applicable
-            foreach (string attachement in options.Attachments)
+            // Add attachments if applicable
+            foreach (var attachment in options.Attachments)
             {
-                if (File.Exists(attachement))
+                if (File.Exists(attachment))
                 {
-                    message.Attachments.Add(new Attachment(attachement));
+                    message.Attachments.Add(new Attachment(attachment));
                 }
             }
 
